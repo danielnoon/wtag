@@ -12,10 +12,11 @@ import * as bcrypt from 'bcrypt';
 import * as jwt from 'jsonwebtoken';
 import { IToken } from './models/token.model';
 import { LoginDto } from './dto/login.dto';
+import { IAccessCodeModel } from './db/AccesCode.schema';
 
 @Injectable()
 export class AuthService {
-  private accessCodes: Array<{ role: string; code: string }> = [];
+  // private accessCodes: Array<{ role: string; code: string }> = [];
   private permissions = new Map<string, Set<string>>([
     [
       'owner',
@@ -60,8 +61,15 @@ export class AuthService {
   ]);
 
   constructor(
-    @InjectModel('User') private readonly userModel: Model<IUserModel>
+    @InjectModel('User') private readonly userModel: Model<IUserModel>,
+    @InjectModel('AccessCode')
+    private readonly accessCodeModel: Model<IAccessCodeModel>
   ) {}
+
+  async wipeDB() {
+    await this.userModel.deleteMany({});
+    await this.accessCodeModel.deleteMany({});
+  }
 
   generateJWT(userId: string) {
     const payload: IToken = {
@@ -74,6 +82,13 @@ export class AuthService {
 
   verifyJWT(token: string) {
     return jwt.verify(token, process.env.JWT_SECRET) as IToken;
+  }
+
+  async newAccessCode(role: string) {
+    const code = uuid.v4();
+    const codeObject = new this.accessCodeModel({ role, code });
+    await codeObject.save();
+    return code;
   }
 
   async verifyPermission(token: string, permission: string) {
@@ -95,8 +110,7 @@ export class AuthService {
     return new Promise<string>(async (resolve, reject) => {
       const numUsers = await this.userModel.estimatedDocumentCount();
       if (numUsers === 0) {
-        const code = uuid.v4();
-        this.accessCodes.push({ role: 'owner', code });
+        const code = await this.newAccessCode('owner');
         resolve(code);
       } else {
         reject(new ForbiddenException('Admin has already been created.'));
@@ -106,10 +120,9 @@ export class AuthService {
 
   register({ username, accessCode, password }: RegisterDto) {
     return new Promise<string>(async (resolve, reject) => {
-      const access = this.accessCodes.find(a => a.code === accessCode);
+      const access = await this.accessCodeModel.findOne({ code: accessCode });
       if (access) {
         if ((await this.userModel.countDocuments({ username })) === 0) {
-          this.accessCodes.splice(this.accessCodes.indexOf(access), 1);
           const hash = await bcrypt.hash(password, 10);
           const user = new this.userModel({
             username,
@@ -118,6 +131,7 @@ export class AuthService {
             oldestAvailableToken: Date.now()
           });
           const newUser = await user.save();
+          this.accessCodeModel.deleteOne({ code: accessCode });
           resolve(this.generateJWT(newUser.id));
         } else {
           reject(new UnprocessableEntityException('User already exists.'));
@@ -148,8 +162,7 @@ export class AuthService {
       const necessaryPermission =
         role === 'admin' ? 'create-admin-accounts' : 'create-accounts';
       if (await this.verifyPermission(token, necessaryPermission)) {
-        const code = uuid.v4();
-        this.accessCodes.push({ role, code });
+        const code = await this.newAccessCode(role);
         return code;
       } else {
         throw new ForbiddenException('Insufficient permissions.');

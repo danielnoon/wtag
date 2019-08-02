@@ -6,13 +6,17 @@ import { ApiV1 } from './apiv1.controller';
 import { MongooseModule } from '@nestjs/mongoose';
 import * as de from 'dotenv';
 import { UserSchema } from './db/User.schema';
+import { AccessCodeSchema } from './db/AccesCode.schema';
 
 de.config();
 
 @Module({
   imports: [
     MongooseModule.forRoot(process.env.MONGO_URL, { useNewUrlParser: true }),
-    MongooseModule.forFeature([{ name: 'User', schema: UserSchema }])
+    MongooseModule.forFeature([{ name: 'User', schema: UserSchema }]),
+    MongooseModule.forFeature([
+      { name: 'AccessCode', schema: AccessCodeSchema }
+    ])
   ],
   controllers: [AppController, ApiV1],
   providers: [AppService, AuthService]

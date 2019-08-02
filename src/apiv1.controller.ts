@@ -15,6 +15,10 @@ import { NewAccessCodeDto } from './dto/new-access-code.dto';
 export class ApiV1 {
   constructor(private readonly auth: AuthService) {}
 
+  wipeDB() {
+    this.auth.wipeDB();
+  }
+
   @Get()
   baseMessage() {
     return `You've reached the WTag API!`;

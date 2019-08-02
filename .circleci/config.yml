@@ -1,0 +1,27 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: circleci/node:12.4
+      - image: circleci/mongo:3.4.4
+    environment:
+      - TEST_MONGO_URL: mongodb://localhost:27017/data
+      - JWT_SECRET: df8755910f49d558acda4e559447214f27990631d9e5c5ed78485a0143ef996d
+
+    working_directory: ~/repo
+
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - v1-dependencies-{{ checksum "package.json" }}
+            - v1-dependencies-
+
+      - run: npm install
+
+      - save_cache:
+          paths:
+            - node_modules
+          key: v1-dependencies-{{ checksum "package.json" }}
+
+      - run: npm test
