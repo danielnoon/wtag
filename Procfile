@@ -1,1 +1,1 @@
-start npm run build && npm run start:prod
+start npm run start:prod
