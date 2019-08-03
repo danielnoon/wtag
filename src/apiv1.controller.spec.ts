@@ -98,9 +98,14 @@ describe('AppController', () => {
       imageHash = hash;
       done();
     });
+    it('should get all images', async done => {
+      const res = await appController.getImages(token, '', '0', '10');
+      expect(res.images.length).toBeTruthy();
+      done();
+    });
     it('should get untagged images', async done => {
       const res = await appController.getImages(token, 'untagged', '0', '10');
-      expect(res.images).toBeDefined();
+      expect(res.images.length).toBeTruthy();
       done();
     });
     it('should tag images', async done => {

@@ -96,7 +96,7 @@ export class ImageService {
   ) {
     if (this.auth.verifyPermission(token, 'view')) {
       const results = await this.imageModel
-        .find({ tags: { $in: tags } })
+        .find(tags.every(tag => tag === '') ? {} : { tags: { $in: tags } })
         .limit(max)
         .skip(skip);
       return results.map(res => ({
