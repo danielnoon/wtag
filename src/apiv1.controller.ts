@@ -53,15 +53,15 @@ export class ApiV1 {
     return { authCode: code };
   }
 
-  @Post('new-access-code')
+  @Get('new-access-code')
   async newAccessCode(
-    @Body() body: NewAccessCodeDto,
-    @Headers('auth-token') token: string
+    @Headers('auth-token') token: string,
+    @Query('role') role: string
   ) {
     if (!token) {
       throw new ForbiddenException('Token not provided.');
     }
-    const code = await this.auth.generateAccessCode(token, body.role);
+    const code = await this.auth.generateAccessCode(token, role);
     return {
       authCode: code
     };

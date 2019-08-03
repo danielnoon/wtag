@@ -77,14 +77,14 @@ describe('AppController', () => {
       done();
     });
     it('should create new access token', async done => {
-      const res = await appController.newAccessCode({ role: 'visitor' }, token);
+      const res = await appController.newAccessCode(token, 'visitor');
       expect(res.authCode).toBeDefined();
       accessCode = res.authCode || '';
       done();
     });
     it('should not allow arbitrary roles', async done => {
       expect(
-        appController.newAccessCode({ role: 'cocksucker' }, token)
+        appController.newAccessCode(token, 'cocksucker')
       ).rejects.toThrow();
       done();
     });
