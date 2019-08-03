@@ -17,12 +17,14 @@ import { NewAccessCodeDto } from './dto/new-access-code.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ImageService } from './image.service';
 import { ApplyTagsDto } from './dto/apply-tags.dto';
+import { TagService } from './tag.service';
 
 @Controller('api/v1')
 export class ApiV1 {
   constructor(
     private readonly auth: AuthService,
-    private readonly image: ImageService
+    private readonly image: ImageService,
+    private readonly tags: TagService
   ) {}
 
   async wipeDB() {
@@ -103,5 +105,11 @@ export class ApiV1 {
     return {
       success: true
     };
+  }
+
+  @Get('tags')
+  async getAllTags(@Headers('auth-token') token: string) {
+    const tags = await this.tags.getAllTags(token);
+    return { tags };
   }
 }

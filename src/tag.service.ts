@@ -30,4 +30,11 @@ export class TagService {
       }
     }
   }
+
+  async getAllTags(token: string) {
+    if (await this.auth.verifyPermission(token, 'assign-tags')) {
+      const tags = await this.tagModel.find({});
+      return tags.map(tag => tag.name);
+    }
+  }
 }

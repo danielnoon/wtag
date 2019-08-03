@@ -116,5 +116,11 @@ describe('AppController', () => {
       expect(res.success).toBeTruthy();
       done();
     });
+
+    it('should get all tags', async done => {
+      const res = await appController.getAllTags(token);
+      expect(res.tags.length > 2).toBeTruthy();
+      done();
+    });
   });
 });
