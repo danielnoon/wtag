@@ -1,6 +1,10 @@
-import * as mongoose from 'mongoose';
+import { Schema, Document } from 'mongoose';
+import { Image } from 'src/models/image.model';
 
-export const ImageSchema = new mongoose.Schema({
-  url: String,
-  name: String
+export const ImageSchema = new Schema({
+  hash: String,
+  name: String,
+  tags: [String]
 });
+
+export interface IImageModel extends Document, Image {}

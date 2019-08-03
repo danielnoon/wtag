@@ -28,7 +28,8 @@ export class AuthService {
         'create-tags',
         'assign-tags',
         'edit-tags',
-        'delete-tags'
+        'delete-tags',
+        'view'
       ])
     ],
     [
@@ -40,7 +41,8 @@ export class AuthService {
         'create-tags',
         'assign-tags',
         'edit-tags',
-        'delete-tags'
+        'delete-tags',
+        'view'
       ])
     ],
     [
@@ -51,13 +53,21 @@ export class AuthService {
         'create-tags',
         'assign-tags',
         'edit-tags',
-        'delete-tags'
+        'delete-tags',
+        'view'
       ])
     ],
     [
       'tagger',
-      new Set(['create-tags', 'assign-tags', 'edit-tags', 'delete-tags'])
-    ]
+      new Set([
+        'create-tags',
+        'assign-tags',
+        'edit-tags',
+        'delete-tags',
+        'view'
+      ])
+    ],
+    ['visitor', new Set(['view'])]
   ]);
 
   constructor(
@@ -103,6 +113,8 @@ export class AuthService {
           return false;
         }
       }
+    } else {
+      throw new UnprocessableEntityException('Invalid or missing token.');
     }
   }
 

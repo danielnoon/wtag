@@ -4,16 +4,26 @@ import {
   Post,
   Body,
   Headers,
-  ForbiddenException
+  ForbiddenException,
+  Put,
+  UseInterceptors,
+  UploadedFile,
+  Query
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { NewAccessCodeDto } from './dto/new-access-code.dto';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { ImageService } from './image.service';
+import { ApplyTagsDto } from './dto/apply-tags.dto';
 
 @Controller('api/v1')
 export class ApiV1 {
-  constructor(private readonly auth: AuthService) {}
+  constructor(
+    private readonly auth: AuthService,
+    private readonly image: ImageService
+  ) {}
 
   wipeDB() {
     this.auth.wipeDB();
@@ -42,7 +52,7 @@ export class ApiV1 {
     return { authCode: code };
   }
 
-  @Post('generate-access-code')
+  @Post('new-access-code')
   async newAccessCode(
     @Body() body: NewAccessCodeDto,
     @Headers('auth-token') token: string
@@ -54,5 +64,40 @@ export class ApiV1 {
     return {
       authCode: code
     };
+  }
+
+  @Put('new-image')
+  @UseInterceptors(FileInterceptor('image'))
+  async uploadImage(
+    @Headers('auth-token') token: string,
+    @UploadedFile() file,
+    @Query('name') name
+  ) {
+    const hash = await this.image.newImage(token, file.buffer, name);
+    return { hash };
+  }
+
+  @Get('images')
+  async getImages(
+    @Headers('auth-token') token: string,
+    @Query('tags') tags: string,
+    @Query('skip') skip: string,
+    @Query('max') max: string
+  ) {
+    const images = await this.image.getImagesByTags(
+      token,
+      tags.split(','),
+      parseInt(max, 10),
+      parseInt(skip, 10)
+    );
+    return { images };
+  }
+
+  @Post('apply-tags')
+  async applyTags(
+    @Headers('auth-token') token: string,
+    @Body() body: ApplyTagsDto
+  ) {
+    await this.image.setTags(token, body.tags, body.image);
   }
 }
