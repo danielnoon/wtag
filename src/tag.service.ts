@@ -11,6 +11,10 @@ export class TagService {
     private auth: AuthService
   ) {}
 
+  async wipeDB() {
+    await this.tagModel.deleteMany({});
+  }
+
   async createTags(token: string, tags: string[]) {
     await this.auth.verifyPermission(token, 'view');
     const existing = await this.tagModel.find({

@@ -5,6 +5,12 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { UserSchema } from './db/User.schema';
 import * as de from 'dotenv';
 import { AccessCodeSchema } from './db/AccesCode.schema';
+import { ImageSchema } from './db/Image.schema';
+import { TagSchema } from './db/Tag.schema';
+import { ImageService } from './image.service';
+import { TagService } from './tag.service';
+import * as fs from 'fs';
+const { readFile } = fs.promises;
 
 de.config();
 
@@ -14,12 +20,14 @@ describe('AppController', () => {
   beforeEach(async () => {
     const app: TestingModule = await Test.createTestingModule({
       controllers: [ApiV1],
-      providers: [AuthService],
+      providers: [AuthService, ImageService, TagService],
       imports: [
         MongooseModule.forRoot(process.env.TEST_MONGO_URL, {
           useNewUrlParser: true
         }),
+        MongooseModule.forFeature([{ name: 'Image', schema: ImageSchema }]),
         MongooseModule.forFeature([{ name: 'User', schema: UserSchema }]),
+        MongooseModule.forFeature([{ name: 'Tag', schema: TagSchema }]),
         MongooseModule.forFeature([
           { name: 'AccessCode', schema: AccessCodeSchema }
         ])
@@ -32,6 +40,7 @@ describe('AppController', () => {
   describe('API', () => {
     let accessCode = '';
     let token = '';
+    let imageHash = '';
     const username = 'daniel';
     const password = 'abc123';
     it('should return welcome message', () => {
@@ -68,7 +77,7 @@ describe('AppController', () => {
       done();
     });
     it('should create new access token', async done => {
-      const res = await appController.newAccessCode({ role: 'admin' }, token);
+      const res = await appController.newAccessCode({ role: 'visitor' }, token);
       expect(res.authCode).toBeDefined();
       accessCode = res.authCode || '';
       done();
@@ -77,6 +86,29 @@ describe('AppController', () => {
       expect(
         appController.newAccessCode({ role: 'cocksucker' }, token)
       ).rejects.toThrow();
+      done();
+    });
+    it('should upload image', async done => {
+      const image = await readFile('test/remington.png');
+      const { hash } = await appController.uploadImage(
+        token,
+        { buffer: image },
+        'Test Image'
+      );
+      imageHash = hash;
+      done();
+    });
+    it('should get untagged images', async done => {
+      const res = await appController.getImages(token, 'untagged', '0', '10');
+      expect(res.images).toBeDefined();
+      done();
+    });
+    it('should tag images', async done => {
+      const res = await appController.applyTags(token, {
+        image: imageHash,
+        tags: ['black-and-white', 'gun-maker', '19th-century']
+      });
+      expect(res.success).toBeTruthy();
       done();
     });
   });

@@ -25,8 +25,9 @@ export class ApiV1 {
     private readonly image: ImageService
   ) {}
 
-  wipeDB() {
-    this.auth.wipeDB();
+  async wipeDB() {
+    await this.auth.wipeDB();
+    await this.image.wipeDB();
   }
 
   @Get()
@@ -99,5 +100,8 @@ export class ApiV1 {
     @Body() body: ApplyTagsDto
   ) {
     await this.image.setTags(token, body.tags, body.image);
+    return {
+      success: true
+    };
   }
 }

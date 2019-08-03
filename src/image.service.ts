@@ -13,6 +13,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { IImageModel } from './db/Image.schema';
 import { Model } from 'mongoose';
 import { TagService } from './tag.service';
+import * as tmp from 'tmp-promise';
 
 const { writeFile, mkdir, unlink } = fs.promises;
 const exists = (path: string) =>
@@ -26,12 +27,18 @@ de.config();
 export class ImageService {
   private readonly storage = new Storage();
   private bucket = this.storage.bucket(process.env.GCP_BUCKET_NAME);
+  private uploadsDir = '';
 
   constructor(
     private auth: AuthService,
     private tags: TagService,
     @InjectModel('Image') private imageModel: Model<IImageModel>
   ) {}
+
+  async wipeDB() {
+    await this.imageModel.deleteMany({});
+    await this.tags.wipeDB();
+  }
 
   async upload(file: string) {
     await this.bucket.upload(file, {
@@ -43,7 +50,7 @@ export class ImageService {
   }
 
   newImage(token: string, file: Buffer, name: string) {
-    return new Promise(async (resolve, reject) => {
+    return new Promise<string>(async (resolve, reject) => {
       try {
         if (this.auth.verifyPermission(token, 'upload-images')) {
           const png = await sharp(file)
@@ -53,10 +60,10 @@ export class ImageService {
           if (await this.imageModel.findOne({ hash })) {
             reject(new UnprocessableEntityException('Image already exists.'));
           } else {
-            if (!(await exists(__dirname + '/uploads'))) {
-              await mkdir(__dirname + '/uploads');
+            if (this.uploadsDir === '') {
+              this.uploadsDir = (await tmp.dir()).path + '/';
             }
-            const fileName = __dirname + '/uploads/' + hash + '.png';
+            const fileName = this.uploadsDir + hash + '.png';
             await writeFile(fileName, png);
             await this.upload(fileName);
             const img = new this.imageModel({
@@ -68,6 +75,8 @@ export class ImageService {
             await unlink(fileName);
             resolve(hash);
           }
+        } else {
+          reject('Invalid permissions.');
         }
       } catch (err) {
         reject(new InternalServerErrorException(err));
