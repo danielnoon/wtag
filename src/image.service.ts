@@ -95,8 +95,20 @@ export class ImageService {
     skip: number
   ) {
     if (this.auth.verifyPermission(token, 'view')) {
+      const yesTags = tags.filter(tag => tag[0] !== '-');
+      const noTags = tags
+        .filter(tag => tag[0] === '-')
+        .map(tag => tag.substring(1));
       const results = await this.imageModel
-        .find(tags.every(tag => tag === '') ? {} : { tags: { $in: tags } })
+        .find(
+          tags.every(tag => tag === '')
+            ? {}
+            : yesTags.every(tag => tag === '')
+            ? { tags: { $nin: noTags } }
+            : noTags.every(tag => tag === '')
+            ? { tags: { $in: yesTags } }
+            : { tags: { $in: yesTags, $nin: noTags } }
+        )
         .limit(max)
         .skip(skip);
       return results.map(res => ({

@@ -116,10 +116,14 @@ describe('AppController', () => {
       expect(res.success).toBeTruthy();
       done();
     });
-
     it('should get all tags', async done => {
       const res = await appController.getAllTags(token);
       expect(res.tags.length > 2).toBeTruthy();
+      done();
+    });
+    it('should get images with negation', async done => {
+      const res = await appController.getImages(token, '-untagged', '0', '10');
+      expect(res.images.length === 1).toBeTruthy();
       done();
     });
   });
