@@ -121,4 +121,10 @@ export class ApiV1 {
     const tags = await this.tags.getAllTags(token);
     return { tags };
   }
+
+  @Post('regenerate-thumbnails')
+  async regenThumbnails(@Headers('auth-token') token: string) {
+    await this.image.regenerateThumbnails(token);
+    return { status: 'complete' };
+  }
 }

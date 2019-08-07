@@ -14,6 +14,7 @@ import { IImageModel } from './db/Image.schema';
 import { Model } from 'mongoose';
 import { TagService } from './tag.service';
 import * as tmp from 'tmp-promise';
+import axios from 'axios';
 
 const { writeFile, mkdir, unlink } = fs.promises;
 const exists = (path: string) =>
@@ -66,6 +67,16 @@ export class ImageService {
             const fileName = this.uploadsDir + hash + '.png';
             await writeFile(fileName, png);
             await this.upload(fileName);
+            const small = await sharp(file)
+              .png()
+              .resize(300, 300, {
+                fit: 'contain',
+                background: { r: 0, g: 0, b: 0, alpha: 0 }
+              })
+              .toBuffer();
+            const smallFileName = this.uploadsDir + hash + '-thumbnail.png';
+            await writeFile(smallFileName, small);
+            await this.upload(smallFileName);
             const img = new this.imageModel({
               hash,
               name,
@@ -109,6 +120,7 @@ export class ImageService {
             ? { tags: { $in: yesTags } }
             : { tags: { $in: yesTags, $nin: noTags } }
         )
+        .sort('name')
         .limit(max)
         .skip(skip);
       return results.map(res => ({
@@ -150,6 +162,39 @@ export class ImageService {
           'No image found with provided id.'
         );
       }
+    }
+  }
+
+  async regenerateThumbnails(token: string) {
+    if (await this.auth.verifyPermission(token, 'upload-images')) {
+      if (this.uploadsDir === '') {
+        this.uploadsDir = (await tmp.dir()).path + '/';
+      }
+      const images = await this.imageModel.find({});
+      let i = 0;
+      for (const image of images) {
+        // tslint:disable-next-line:no-console
+        console.log('On image ' + i);
+        i++;
+        const response = await axios({
+          url: this.getBaseUrl() + '/' + image.hash + '.png',
+          method: 'get',
+          responseType: 'arraybuffer'
+        });
+
+        const small = await sharp(response.data)
+          .png()
+          .resize(300, 300, {
+            fit: 'contain',
+            background: { r: 0, g: 0, b: 0, alpha: 0 }
+          })
+          .toBuffer();
+        const smallFileName = this.uploadsDir + image.hash + '-thumbnail.png';
+        await writeFile(smallFileName, small);
+        await this.upload(smallFileName);
+      }
+    } else {
+      throw new UnprocessableEntityException('Invalid permissions.');
     }
   }
 }
