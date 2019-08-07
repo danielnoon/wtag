@@ -52,7 +52,7 @@ export class ImageService {
   newImage(token: string, file: Buffer, name: string) {
     return new Promise<string>(async (resolve, reject) => {
       try {
-        if (this.auth.verifyPermission(token, 'upload-images')) {
+        if (await this.auth.verifyPermission(token, 'upload-images')) {
           const png = await sharp(file)
             .png()
             .toBuffer();
@@ -94,7 +94,7 @@ export class ImageService {
     max: number,
     skip: number
   ) {
-    if (this.auth.verifyPermission(token, 'view')) {
+    if (await this.auth.verifyPermission(token, 'view')) {
       const yesTags = tags.filter(tag => tag[0] !== '-');
       const noTags = tags
         .filter(tag => tag[0] === '-')
@@ -124,9 +124,32 @@ export class ImageService {
   }
 
   async setTags(token: string, tags: string[], hash: string) {
-    await this.tags.createTags(token, tags);
-    const image = await this.imageModel.findOne({ hash });
-    image.tags = tags;
-    await image.save();
+    if (await this.auth.verifyPermission(token, 'assign-tags')) {
+      await this.tags.createTags(token, tags);
+      const image = await this.imageModel.findOne({ hash });
+      image.tags = tags;
+      await image.save();
+    } else {
+      throw new UnprocessableEntityException('Insufficient permissions.');
+    }
+  }
+
+  async getImageByHash(token: string, hash: string) {
+    if (await this.auth.verifyPermission(token, 'view')) {
+      const image = await this.imageModel.findOne({ hash });
+      if (image) {
+        return {
+          baseUrl: this.getBaseUrl(),
+          hash,
+          fileExt: 'png',
+          name: image.name,
+          tags: image.tags
+        };
+      } else {
+        throw new UnprocessableEntityException(
+          'No image found with provided id.'
+        );
+      }
+    }
   }
 }

@@ -96,6 +96,15 @@ export class ApiV1 {
     return { images };
   }
 
+  @Get('image')
+  async getImage(
+    @Headers('auth-token') token: string,
+    @Query('hash') hash: string
+  ) {
+    const image = await this.image.getImageByHash(token, hash);
+    return { image };
+  }
+
   @Post('apply-tags')
   async applyTags(
     @Headers('auth-token') token: string,
