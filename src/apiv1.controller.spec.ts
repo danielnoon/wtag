@@ -99,7 +99,7 @@ describe('AppController', () => {
       done();
     });
     it('should get all images', async done => {
-      const res = await appController.getImages(token, '', '0', '10');
+      const res = await appController.getImages(token, '', '0', '10', 'name');
       expect(res.images.length).toBeTruthy();
       done();
     });
@@ -109,7 +109,13 @@ describe('AppController', () => {
       done();
     });
     it('should get untagged images', async done => {
-      const res = await appController.getImages(token, 'untagged', '0', '10');
+      const res = await appController.getImages(
+        token,
+        'untagged',
+        '0',
+        '10',
+        'name'
+      );
       expect(res.images.length).toBeTruthy();
       done();
     });
@@ -127,7 +133,13 @@ describe('AppController', () => {
       done();
     });
     it('should get images with negation', async done => {
-      const res = await appController.getImages(token, '-untagged', '0', '10');
+      const res = await appController.getImages(
+        token,
+        '-untagged',
+        '0',
+        '10',
+        'name'
+      );
       expect(res.images.length === 1).toBeTruthy();
       done();
     });
