@@ -80,7 +80,9 @@ export class ImageService {
             const img = new this.imageModel({
               hash,
               name,
-              tags: ['untagged']
+              tags: ['untagged'],
+              uploaded: Date.now(),
+              updated: Date.now()
             });
             await img.save();
             await unlink(fileName);
@@ -103,7 +105,8 @@ export class ImageService {
     token: string,
     tags: string[],
     max: number,
-    skip: number
+    skip: number,
+    sortBy: string = 'name'
   ) {
     if (await this.auth.verifyPermission(token, 'view')) {
       const yesTags = tags.filter(tag => tag[0] !== '-');
@@ -120,7 +123,7 @@ export class ImageService {
             ? { tags: { $in: yesTags } }
             : { tags: { $in: yesTags, $nin: noTags } }
         )
-        .sort('name')
+        .sort(sortBy)
         .limit(max)
         .skip(skip);
       return results.map(res => ({
@@ -140,6 +143,7 @@ export class ImageService {
       await this.tags.createTags(token, tags);
       const image = await this.imageModel.findOne({ hash });
       image.tags = tags;
+      image.updated = Date.now();
       await image.save();
     } else {
       throw new UnprocessableEntityException('Insufficient permissions.');

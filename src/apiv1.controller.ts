@@ -85,13 +85,15 @@ export class ApiV1 {
     @Headers('auth-token') token: string,
     @Query('tags') tags: string,
     @Query('skip') skip: string,
-    @Query('max') max: string
+    @Query('max') max: string,
+    @Query('sort-by') sortBy: string
   ) {
     const images = await this.image.getImagesByTags(
       token,
       tags.split(','),
       parseInt(max, 10),
-      parseInt(skip, 10)
+      parseInt(skip, 10),
+      sortBy
     );
     return { images };
   }

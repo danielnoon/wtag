@@ -1,7 +1,4 @@
-const de = require('dotenv');
 const fs = require('fs');
-
-de.config();
 
 if (process.env.GOOGLE_CONFIG) {
   if (!fs.existsSync(__dirname + '/config')) {
