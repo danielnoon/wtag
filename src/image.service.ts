@@ -201,4 +201,21 @@ export class ImageService {
       throw new UnprocessableEntityException('Invalid permissions.');
     }
   }
+
+  async deleteImage(token: string, hash: string) {
+    if (await this.auth.verifyPermission(token, 'delete-images')) {
+      try {
+        const image = await this.imageModel.findOneAndDelete({ hash });
+        if (image) {
+          this.bucket.file(hash + '.png').delete();
+          this.bucket.file(hash + '-thumbnail.png').delete();
+          return true;
+        } else {
+          throw new UnprocessableEntityException('Image does not exist');
+        }
+      } catch (err) {
+        throw new InternalServerErrorException();
+      }
+    }
+  }
 }

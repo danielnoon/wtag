@@ -18,7 +18,7 @@ jobs:
       - image: circleci/node:12.4
       - image: circleci/mongo:latest
     environment:
-      - TEST_MONGO_URL: mongodb://localhost:27017/data
+      - MONGO_URL: mongodb://localhost:27017/data
       - JWT_SECRET: df8755910f49d558acda4e559447214f27990631d9e5c5ed78485a0143ef996d
 
     working_directory: ~/repo

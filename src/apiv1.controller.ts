@@ -8,7 +8,8 @@ import {
   Put,
   UseInterceptors,
   UploadedFile,
-  Query
+  Query,
+  Delete
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
@@ -128,5 +129,18 @@ export class ApiV1 {
   async regenThumbnails(@Headers('auth-token') token: string) {
     await this.image.regenerateThumbnails(token);
     return { status: 'complete' };
+  }
+
+  @Delete('image')
+  async deleteImage(
+    @Headers('auth-token') token: string,
+    @Query('hash') hash: string
+  ) {
+    const success = await this.image.deleteImage(token, hash);
+    if (success) {
+      return {
+        success
+      };
+    }
   }
 }

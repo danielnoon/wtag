@@ -22,7 +22,7 @@ describe('AppController', () => {
       controllers: [ApiV1],
       providers: [AuthService, ImageService, TagService],
       imports: [
-        MongooseModule.forRoot(process.env.TEST_MONGO_URL, {
+        MongooseModule.forRoot(process.env.MONGO_URL, {
           useNewUrlParser: true
         }),
         MongooseModule.forFeature([{ name: 'Image', schema: ImageSchema }]),
@@ -141,6 +141,11 @@ describe('AppController', () => {
         'name'
       );
       expect(res.images.length === 1).toBeTruthy();
+      done();
+    });
+    it('should delete images', async done => {
+      const res = await appController.deleteImage(token, imageHash);
+      expect(res.success).toBeTruthy();
       done();
     });
   });
