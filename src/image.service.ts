@@ -1,7 +1,8 @@
 import {
   Injectable,
   InternalServerErrorException,
-  UnprocessableEntityException
+  UnprocessableEntityException,
+  UnauthorizedException
 } from '@nestjs/common';
 import { Storage } from '@google-cloud/storage';
 import * as de from 'dotenv';
@@ -89,7 +90,7 @@ export class ImageService {
             resolve(hash);
           }
         } else {
-          reject('Invalid permissions.');
+          reject(new UnauthorizedException('Insufficient permissions.'));
         }
       } catch (err) {
         reject(new InternalServerErrorException(err));
@@ -134,7 +135,7 @@ export class ImageService {
         tags: res.tags
       }));
     } else {
-      throw new UnprocessableEntityException('Insufficient permissions.');
+      throw new UnauthorizedException('Insufficient permissions.');
     }
   }
 
@@ -146,7 +147,7 @@ export class ImageService {
       image.updated = Date.now();
       await image.save();
     } else {
-      throw new UnprocessableEntityException('Insufficient permissions.');
+      throw new UnauthorizedException('Insufficient permissions.');
     }
   }
 
@@ -198,7 +199,7 @@ export class ImageService {
         await this.upload(smallFileName);
       }
     } else {
-      throw new UnprocessableEntityException('Invalid permissions.');
+      throw new UnauthorizedException('Insufficient permissions.');
     }
   }
 
@@ -216,6 +217,36 @@ export class ImageService {
       } catch (err) {
         throw new InternalServerErrorException();
       }
+    }
+  }
+
+  async deduplicate(token: string) {
+    if (await this.auth.verifyPermission(token, 'delete-images')) {
+      const images = await this.imageModel.aggregate([
+        {
+          $group: {
+            _id: '$hash',
+            dups: { $addToSet: '$_id' },
+            count: { $sum: 1 }
+          }
+        },
+        {
+          $match: {
+            count: { $gt: 1 }
+          }
+        }
+      ]);
+
+      for (const image of images) {
+        image.dups.shift();
+        for (const dup of image.dups) {
+          await this.imageModel.deleteOne({ _id: dup });
+        }
+      }
+
+      return true;
+    } else {
+      throw new UnauthorizedException('Insufficient permissions.');
     }
   }
 }

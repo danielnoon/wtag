@@ -15,7 +15,12 @@ For now, though, follow these couple of steps:
    2. `GCP_BUCKET_NAME`: name of your bucket
    3. `JWT_SECRET`: secret to sign your JSON Web Tokens with
    4. `GOOGLE_APPLICATION_CREDENTIALS`: path to JSON file containing GCP authentication information
-      * Tip: if you're deploying from a public GitHub repository, *DO NOT* push a json file with the configuration. Make another variable called `GOOGLE_CONFIG` and set it to *the entire contents* of the JSON file. Then set `GOOGLE_APPLICATION_CREDENTIALS` to `./config/gcp.json`.
+      * Tip: if you're deploying from a public GitHub repository, *DO NOT* push a json file with the configuration into the repo. It contains very sensitive information. Make another variable called `GOOGLE_CONFIG` and set it to *the entire contents* of the JSON file. Then set `GOOGLE_APPLICATION_CREDENTIALS` to `./config/gcp.json`.
 4. Install the dependencies with `npm i`
 5. Build the app with `npm run build`
 6. Start the app with `npm start`
+
+## How do I access my server with a front-end?
+There's one available that anyone may use! Head on over to [https://wtag.supermegadex.net/init](https://wtag.supermegadex.net/init) to set up your server for the first time.
+
+It will ask you for your deployment url, which is the url you go to that returns "Hello, world!" That should give you back your owner access code. When you register for an account with this code, your account will become the owner. Make sure no one knows your deployment URL or access code before you register, or you might lose the ability to make the owner account!

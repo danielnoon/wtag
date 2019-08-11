@@ -143,4 +143,10 @@ export class ApiV1 {
       };
     }
   }
+
+  @Post('dedupilcate')
+  async deduplicateImages(@Headers('auth-token') token: string) {
+    const success = this.image.deduplicate(token);
+    return { success };
+  }
 }
