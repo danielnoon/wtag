@@ -104,6 +104,8 @@ export class ImageService {
     });
 
     await img.save();
+
+    return hash;
   }
 
   getBaseUrl() {
