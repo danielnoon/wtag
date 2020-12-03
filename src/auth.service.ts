@@ -1,7 +1,8 @@
 import {
   Injectable,
   ForbiddenException,
-  UnprocessableEntityException
+  UnprocessableEntityException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
@@ -12,7 +13,7 @@ import * as bcrypt from 'bcrypt';
 import * as jwt from 'jsonwebtoken';
 import { IToken } from './models/token.model';
 import { LoginDto } from './dto/login.dto';
-import { IAccessCodeModel } from './db/AccesCode.schema';
+import { IAccessCodeModel } from './db/AccessCode.schema';
 
 @Injectable()
 export class AuthService {
@@ -29,8 +30,8 @@ export class AuthService {
         'assign-tags',
         'edit-tags',
         'delete-tags',
-        'view'
-      ])
+        'view',
+      ]),
     ],
     [
       'admin',
@@ -42,8 +43,8 @@ export class AuthService {
         'assign-tags',
         'edit-tags',
         'delete-tags',
-        'view'
-      ])
+        'view',
+      ]),
     ],
     [
       'mod',
@@ -54,8 +55,8 @@ export class AuthService {
         'assign-tags',
         'edit-tags',
         'delete-tags',
-        'view'
-      ])
+        'view',
+      ]),
     ],
     [
       'tagger',
@@ -64,10 +65,10 @@ export class AuthService {
         'assign-tags',
         'edit-tags',
         'delete-tags',
-        'view'
-      ])
+        'view',
+      ]),
     ],
-    ['visitor', new Set(['view'])]
+    ['visitor', new Set(['view'])],
   ]);
 
   constructor(
@@ -84,7 +85,7 @@ export class AuthService {
   generateJWT(userId: string) {
     const payload: IToken = {
       iat: Date.now(),
-      id: userId
+      id: userId,
     };
     const token = jwt.sign(payload, process.env.JWT_SECRET);
     return token;
@@ -114,7 +115,7 @@ export class AuthService {
           if (permissions.has(permission)) {
             return true;
           } else {
-            return false;
+            throw new UnauthorizedException('Insufficient permissions.');
           }
         }
       } else {
@@ -147,7 +148,7 @@ export class AuthService {
             username,
             password: hash,
             role: access.role,
-            oldestAvailableToken: Date.now()
+            oldestAvailableToken: Date.now(),
           });
           const newUser = await user.save();
           this.accessCodeModel.deleteOne({ code: accessCode });

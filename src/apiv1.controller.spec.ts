@@ -4,7 +4,7 @@ import { AuthService } from './auth.service';
 import { MongooseModule } from '@nestjs/mongoose';
 import { UserSchema } from './db/User.schema';
 import * as de from 'dotenv';
-import { AccessCodeSchema } from './db/AccesCode.schema';
+import { AccessCodeSchema } from './db/AccessCode.schema';
 import { ImageSchema } from './db/Image.schema';
 import { TagSchema } from './db/Tag.schema';
 import { ImageService } from './image.service';
@@ -23,15 +23,15 @@ describe('AppController', () => {
       providers: [AuthService, ImageService, TagService],
       imports: [
         MongooseModule.forRoot(process.env.MONGO_URL, {
-          useNewUrlParser: true
+          useNewUrlParser: true,
         }),
         MongooseModule.forFeature([{ name: 'Image', schema: ImageSchema }]),
         MongooseModule.forFeature([{ name: 'User', schema: UserSchema }]),
         MongooseModule.forFeature([{ name: 'Tag', schema: TagSchema }]),
         MongooseModule.forFeature([
-          { name: 'AccessCode', schema: AccessCodeSchema }
-        ])
-      ]
+          { name: 'AccessCode', schema: AccessCodeSchema },
+        ]),
+      ],
     }).compile();
 
     appController = app.get<ApiV1>(ApiV1);
@@ -46,49 +46,49 @@ describe('AppController', () => {
     it('should return welcome message', () => {
       expect(appController.baseMessage()).toBe(`You've reached the WTag API!`);
     });
-    it('should return an access token on first init', async done => {
+    it('should return an access token on first init', async (done) => {
       await appController.wipeDB();
       const res = await appController.initialize();
       expect(res.authCode).toBeDefined();
       accessCode = res.authCode || '';
       done();
     });
-    it('should make an account with authcode', async done => {
+    it('should make an account with authcode', async (done) => {
       const res = await appController.register({
         username,
         password,
-        accessCode
+        accessCode,
       });
       expect(res.token).toBeDefined();
       token = res.token || '';
       done();
     });
-    it('should not return an access token on subsequent inits', async done => {
+    it('should not return an access token on subsequent inits', async (done) => {
       expect(appController.initialize()).rejects.toThrow();
       done();
     });
-    it('should accept login', async done => {
+    it('should accept login', async (done) => {
       const res = await appController.login({
         username,
-        password
+        password,
       });
       expect(res.token).toBeDefined();
       token = res.token || '';
       done();
     });
-    it('should create new access token', async done => {
+    it('should create new access token', async (done) => {
       const res = await appController.newAccessCode(token, 'visitor');
       expect(res.authCode).toBeDefined();
       accessCode = res.authCode || '';
       done();
     });
-    it('should not allow arbitrary roles', async done => {
+    it('should not allow arbitrary roles', async (done) => {
       expect(
         appController.newAccessCode(token, 'cocksucker')
       ).rejects.toThrow();
       done();
     });
-    it('should upload image', async done => {
+    it('should upload image', async (done) => {
       const image = await readFile('test/remington.png');
       const { hash } = await appController.uploadImage(
         token,
@@ -98,17 +98,17 @@ describe('AppController', () => {
       imageHash = hash;
       done();
     });
-    it('should get all images', async done => {
+    it('should get all images', async (done) => {
       const res = await appController.getImages(token, '', '0', '10', 'name');
       expect(res.images.length).toBeTruthy();
       done();
     });
-    it('should get one image', async done => {
+    it('should get one image', async (done) => {
       const res = await appController.getImage(token, imageHash);
       expect(res.image.tags).toBeTruthy();
       done();
     });
-    it('should get untagged images', async done => {
+    it('should get untagged images', async (done) => {
       const res = await appController.getImages(
         token,
         'untagged',
@@ -119,20 +119,20 @@ describe('AppController', () => {
       expect(res.images.length).toBeTruthy();
       done();
     });
-    it('should tag images', async done => {
+    it('should tag images', async (done) => {
       const res = await appController.applyTags(token, {
         image: imageHash,
-        tags: ['black-and-white', 'gun-maker', '19th-century']
+        tags: ['black-and-white', 'gun-maker', '19th-century'],
       });
       expect(res.success).toBeTruthy();
       done();
     });
-    it('should get all tags', async done => {
+    it('should get all tags', async (done) => {
       const res = await appController.getAllTags(token);
       expect(res.tags.length > 2).toBeTruthy();
       done();
     });
-    it('should get images with negation', async done => {
+    it('should get images with negation', async (done) => {
       const res = await appController.getImages(
         token,
         '-untagged',
@@ -143,7 +143,7 @@ describe('AppController', () => {
       expect(res.images.length === 1).toBeTruthy();
       done();
     });
-    it('should delete images', async done => {
+    it('should delete images', async (done) => {
       const res = await appController.deleteImage(token, imageHash);
       expect(res.success).toBeTruthy();
       done();
