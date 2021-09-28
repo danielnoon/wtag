@@ -17,11 +17,7 @@ import { AuthService } from './auth.service';
 import { IImageModel } from './db/Image.schema';
 import { TagService } from './tag.service';
 
-const { writeFile, mkdir, unlink } = fs.promises;
-const exists = (path: string) =>
-  new Promise((resolve, reject) => {
-    fs.exists(path, (yes) => resolve(yes));
-  });
+const { writeFile, unlink } = fs.promises;
 
 de.config();
 
@@ -126,10 +122,14 @@ export class ImageService {
       .filter((tag) => tag[0] === '-')
       .map((tag) => tag.substring(1));
 
+    if (!yesTags.includes('*sensitive')) {
+      noTags.push('*sensitive');
+    }
+
     const results = await this.imageModel
       .find(
         tags.every((tag) => tag === '') || tags.length === 0
-          ? {}
+          ? { tags: { $nin: ['*sensitive'] } }
           : yesTags.every((tag) => tag === '')
           ? { tags: { $nin: noTags } }
           : noTags.every((tag) => tag === '')
