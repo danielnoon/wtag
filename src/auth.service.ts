@@ -106,23 +106,20 @@ export class AuthService {
     if (!token) {
       throw new UnprocessableEntityException('No token provided.');
     }
-    try {
-      const { id } = this.verifyJWT(token);
-      const user = await this.userModel.findById(id);
-      if (user) {
-        if (this.permissions.has(user.role)) {
-          const permissions = this.permissions.get(user.role)!;
-          if (permissions.has(permission)) {
-            return true;
-          } else {
-            throw new UnauthorizedException('Insufficient permissions.');
-          }
+    const { id } = this.verifyJWT(token);
+    const user = await this.userModel.findById(id);
+
+    if (user) {
+      if (this.permissions.has(user.role)) {
+        const permissions = this.permissions.get(user.role)!;
+        if (permissions.has(permission)) {
+          return true;
+        } else {
+          throw new UnauthorizedException('Insufficient permissions.');
         }
-      } else {
-        throw new UnprocessableEntityException('Invalid or missing token.');
       }
-    } catch (err) {
-      return false;
+    } else {
+      throw new UnprocessableEntityException('Invalid or missing token.');
     }
   }
 
