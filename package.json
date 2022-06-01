@@ -38,7 +38,7 @@
     "reflect-metadata": "^0.1.12",
     "rimraf": "^3.0.2",
     "rxjs": "^6.6.3",
-    "sharp": "^0.26.3",
+    "sharp": "^0.30.5",
     "tmp-promise": "^2.0.2",
     "uuid": "^8.3.1"
   },
