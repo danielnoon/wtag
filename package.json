@@ -29,7 +29,7 @@
     "axios": "^0.21.0",
     "bcrypt": "^5.0.0",
     "class-transformer": "^0.3.1",
-    "class-validator": "^0.12.2",
+    "class-validator": "^0.14.0",
     "dotenv": "^8.2.0",
     "hash.js": "^1.1.7",
     "hasha": "^5.2.2",
